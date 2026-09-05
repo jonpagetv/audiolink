@@ -1,0 +1,71 @@
+# Caddy config for audiolink, fronted by Cloudflare's proxy — one of two
+# supported deployment modes (see infra/Caddyfile.direct for the other,
+# and infra/install.sh, which deploys whichever one you choose).
+#
+# The public-facing hostname (audiolink.example.com) is proxied through
+# Cloudflare (orange cloud) — visitors reach Cloudflare's edge on the
+# standard HTTPS port, and Cloudflare forwards to this origin. That's the
+# whole reason this runs on 443 now rather than a non-standard port: 443
+# is one of the fixed ports Cloudflare's free plan actually proxies.
+#
+# The old "keep 80/443 closed, hide behind a non-standard port" reasoning
+# no longer applies once Cloudflare sits in front — the origin's real IP
+# isn't what the public connects to for this hostname anymore, so there's
+# nothing left for a non-standard port to hide. See docs/security-overview.md.
+#
+# TURN (coturn) is NOT behind Cloudflare and never will be — it has its own
+# unproxied DNS-only subdomain (e.g. turn.audiolink.example.com) pointed at
+# this same origin IP, reachable directly on 3478 + the relay port range,
+# same as before. Browsers' WebRTC stacks have no transport that could run
+# TURN through an HTTP(S) proxy in the first place.
+#
+# auto_https off: certs are still obtained manually via certbot's DNS-01
+# challenge (see infra/README.md) and supplied explicitly below, not via
+# Caddy's own ACME management — and with this site now on a "qualifying"
+# port for Caddy's automatic-HTTPS heuristics, this also stops Caddy from
+# adding an implicit HTTP->HTTPS redirect (and binding port 80) on its own.
+# Whether port 80 is actually reachable from the internet is still up to
+# the router's forward rules regardless, but there's no reason for Caddy
+# to bind it locally for a feature this setup never uses.
+#
+# trusted_proxies: once Cloudflare is in front, every connection Caddy
+# receives comes from Cloudflare's own edge IPs, not the real visitor —
+# without this, fail2ban (which watches the access log below) and the
+# app's own per-IP rate limiter would both start seeing Cloudflare's IP
+# for every request instead of the actual client's, silently defeating
+# both. This tells Caddy to trust Cloudflare's edge ranges specifically
+# (not just any proxy) and take the real client IP from the header
+# Cloudflare adds. Verify this list against https://www.cloudflare.com/ips/
+# occasionally — Cloudflare updates it, rarely but not never.
+{
+	servers {
+		trusted_proxies static \
+ 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 \
+ 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 \
+ 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 \
+ 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 \
+ 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 \
+ 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+	}
+	auto_https off
+}
+
+audiolink.example.com {
+	tls /etc/caddy/certs/audiolink.example.com/fullchain.pem /etc/caddy/certs/audiolink.example.com/privkey.pem
+
+	# JSON access log — fail2ban watches this for repeated 401s (now from
+	# the Node app's own auth, proxied through here — same status code,
+	# same log fields, so the existing filter still applies unchanged).
+	# roll_* bounds it to 10 files of 50MB each (~500MB worst case) instead
+	# of growing forever — a long-running rack server won't get revisited
+	# often enough to catch that manually.
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 50mb
+			roll_keep 10
+			roll_keep_for 2160h
+		}
+	}
+
+	reverse_proxy localhost:3000
+}

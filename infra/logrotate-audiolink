@@ -1,0 +1,19 @@
+# Rotates the app's own audit trail (server/data/activity.log) — Caddy's
+# access log rotates itself via the Caddyfile's roll_* options instead.
+#
+# No copytruncate/postrotate signal needed: audit-log.js writes with
+# fs.appendFile, which opens and closes the file on every single write
+# rather than holding a long-lived handle — the next write after a
+# rename just recreates the file at the same path.
+#
+# Deploy: sudo cp infra/logrotate-audiolink /etc/logrotate.d/audiolink
+# (adjust the path below if the app isn't deployed at /opt/audiolink)
+/opt/audiolink/server/data/activity.log {
+	monthly
+	rotate 12
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 640 audiolink audiolink
+}

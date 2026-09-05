@@ -1,0 +1,16 @@
+node_modules/
+.env
+*.log
+server/data/
+
+# TLS/key material should never live in this repo — deployed hosts keep
+# certs under /etc/letsencrypt and /etc/caddy/certs, outside the checkout.
+*.pem
+*.key
+
+# Editor/OS cruft
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~

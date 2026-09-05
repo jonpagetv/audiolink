@@ -1,0 +1,19 @@
+[Unit]
+Description=audiolink Node app
+After=network.target
+
+[Service]
+Type=simple
+User=vboxuser
+WorkingDirectory=/home/vboxuser/Repos/audiolink/server
+# Same invocation used throughout dev (node's built-in .env loader) rather
+# than systemd's EnvironmentFile=, so there's exactly one way the app reads
+# its config regardless of how it's started.
+ExecStart=/usr/bin/node --env-file=.env index.js
+Restart=on-failure
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

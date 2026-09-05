@@ -1,0 +1,17 @@
+{
+  "name": "audiolink-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Signaling server and static hosting for the audiolink client/studio/admin UIs.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.18.0"
+  }
+}

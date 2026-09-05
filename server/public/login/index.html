@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>audiolink — Log In</title>
+  <link rel="stylesheet" href="/shared/style.css" />
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-stack">
+      <div class="brand-lockup">
+        <img src="/shared/img/logo.png" alt="audiolink" class="brand-logo" />
+      </div>
+      <div class="panel auth-card">
+        <h1 class="panel-title">Log In</h1>
+        <form id="loginForm">
+          <div class="field">
+            <label for="username">Username</label>
+            <input type="text" id="username" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="btn-primary btn-block">Log In</button>
+          <p id="error" class="form-error"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="login.js"></script>
+</body>
+</html>

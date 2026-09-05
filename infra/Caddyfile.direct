@@ -1,0 +1,48 @@
+# Caddy config for audiolink, reached directly (no Cloudflare or other
+# proxy in front) — one of two supported deployment modes (see
+# infra/Caddyfile.cloudflare for the other, and infra/install.sh, which
+# deploys whichever one you choose).
+#
+# Deliberately NOT using Caddy's automatic HTTPS (which needs 80/443
+# reachable for the ACME HTTP/TLS-ALPN challenge) — ports 80 and 443
+# stay closed to the internet entirely. The cert is obtained manually
+# via certbot's DNS-01 challenge instead (see infra/README.md), and
+# served here on a non-standard external port, so there's nothing on
+# the well-known web ports for casual scanners to find. This reasoning
+# doesn't apply once something like Cloudflare sits in front instead —
+# see infra/Caddyfile.cloudflare and docs/security-overview.md.
+#
+# Caddy still terminates TLS and reverse-proxies everything, WebSocket
+# upgrades included, to the Node app. Node listens on 127.0.0.1:3000
+# only — not reachable directly, from the LAN or anywhere else; Caddy
+# is the sole entry point.
+#
+# Install: sudo apt install caddy
+# Deploy:  sudo cp infra/Caddyfile.direct /etc/caddy/Caddyfile
+#          sudo mkdir -p /var/log/caddy && sudo chown caddy:caddy /var/log/caddy
+#          sudo systemctl reload caddy
+#
+# Cert/key paths point at a caddy-readable copy, not directly at
+# certbot's /etc/letsencrypt/live/ output (root-only, Caddy can't read
+# it there) — see infra/renew-cert.sh, which populates this path and
+# must be re-run after every renewal.
+
+audiolink.example.com:52001 {
+	tls /etc/caddy/certs/audiolink.example.com/fullchain.pem /etc/caddy/certs/audiolink.example.com/privkey.pem
+
+	# JSON access log — fail2ban watches this for repeated 401s (now from
+	# the Node app's own auth, proxied through here — same status code,
+	# same log fields, so the existing filter still applies unchanged).
+	# roll_* bounds it to 10 files of 50MB each (~500MB worst case) instead
+	# of growing forever — a long-running rack server won't get revisited
+	# often enough to catch that manually.
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 50mb
+			roll_keep 10
+			roll_keep_for 2160h
+		}
+	}
+
+	reverse_proxy localhost:3000
+}

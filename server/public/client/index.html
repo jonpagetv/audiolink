@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>audiolink — Client</title>
+  <link rel="stylesheet" href="/shared/style.css" />
+</head>
+<body>
+  <header class="app-header" id="appHeader"></header>
+
+  <div class="page">
+    <h1 class="page-title" id="linkName">Loading…</h1>
+    <p class="page-subtitle">Field link to studio.</p>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Call</h2>
+      </div>
+      <div class="stat-row">
+        <span class="status-badge status-idle" id="status">idle</span>
+        <span class="stat-label">Round-trip</span>
+        <span class="stat-value" id="rtt">—</span>
+      </div>
+      <div class="button-row">
+        <button id="startBtn" class="btn-primary">Start Link</button>
+        <button id="stopBtn" class="btn-secondary" disabled>Stop Link</button>
+      </div>
+      <audio id="remoteAudio" autoplay></audio>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Audio Devices</h2>
+        <button id="refreshDevicesBtn" type="button" class="btn-ghost">Refresh Devices</button>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="inputSelect">Input</label>
+          <select id="inputSelect" disabled><option value="">(system default)</option></select>
+        </div>
+        <div class="field">
+          <label for="outputSelect">Output</label>
+          <select id="outputSelect" disabled><option value="">(system default)</option></select>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="client.js"></script>
+</body>
+</html>
